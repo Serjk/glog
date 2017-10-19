@@ -978,6 +978,13 @@ func (l *loggingT) setV(pc uintptr) Level {
 	return 0
 }
 
+var skipFileHierarchy = 2
+
+//skip is the number of stack frames to skip before defining file name callers
+func SetSkipFileHierarchy(skip int)  {
+	skipFileHierarchy = skip
+}
+
 // Verbose is a boolean type that implements Infof (like Printf) etc.
 // See the documentation of V for more information.
 type Verbose bool
@@ -1013,7 +1020,8 @@ func V(level Level) Verbose {
 		// but if V logging is enabled we're slow anyway.
 		logging.mu.Lock()
 		defer logging.mu.Unlock()
-		if runtime.Callers(2, logging.pcs[:]) == 0 {
+
+		if runtime.Callers(skipFileHierarchy, logging.pcs[:]) == 0 {
 			return Verbose(false)
 		}
 		v, ok := logging.vmap[logging.pcs[0]]
